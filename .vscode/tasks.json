@@ -8,16 +8,23 @@
 			"args": [
 				"-fdiagnostics-color=always",
 				"-g",
-				"-pedantic-errors",
 				"-Wall",
-				"-Weffc++",
 				"-Wextra",
 				"-Wconversion",
-				"-Werror",
 				"-Wsign-conversion",
 				"${file}",
 				"-o",
-				"${fileDirname}\\${fileBasenameNoExtension}.exe"
+				"${fileDirname}\\${fileBasenameNoExtension}.exe",
+				// 1. Tell the compiler where the HEADER files are
+				"-I",
+				"C:\\bin\\SFML-2.6.1\\include",
+				// 2. Tell the compiler where the LIBRARY (.a) files are
+				"-L",
+				"C:\\msys64\\ucrt64\\include",
+				// 3. Link the specific SFML modules
+				"-lsfml-graphics",
+				"-lsfml-window",
+				"-lsfml-system"
 			],
 			"options": {
 				"cwd": "${fileDirname}"
