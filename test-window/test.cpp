@@ -1,53 +1,90 @@
-// Import Packages
-#include <SFML/Graphics.hpp> // Includes the 2D graphics tools
-#include <vector>            // A dynamic array (like an Arduino array, but smarter)
-#include <algorithm>         // Useful for things like std::swap
+#include <SFML/Graphics.hpp>
+#include <vector>
+#include <thread> // For std::thread
+#include <atomic> // For thread-safe variables
 
-// Main function loop
-int main() {
-    // 1. Setup the Window: (Width, Height, Title)
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Sorting Visualizer");
-    window.setFramerateLimit(60); // Limits the loop to 60 "ticks" per second
+// These are our "Global" (shared) variables
+std::vector<int> data = {100, 50, 200, 150, 300, 10, 80};
+std::atomic<int> indexA(-1); // The first index being compared
+std::atomic<int> indexB(-1); // The second index being compared
+std::atomic<bool> isSorting(false);
 
-    // 2. Data Setup: Create a list of numbers to sort
-    std::vector<int> data = {150, 400, 200, 350, 100, 500, 250};
-    float barWidth = 50.0f; // How wide each rectangle is
+// --- THE SORTING FUNCTION (Runs on Thread 2) ---
+void bubbleSort()
+{
+    isSorting = true;
+    for (size_t i = 0; i < data.size() - 1; i++)
+    {
+        for (size_t j = 0; j < data.size() - i - 1; j++)
+        {
+            // Tell the UI thread what we are looking at
+            indexA = (int)j;
+            indexB = (int)j + 1;
 
-    // 3. The Main Loop (Your 'void loop')
-    while (window.isOpen()) {
-        
-        // CHECK FOR EVENTS (Like clicking the X button)
+            if (data[j] > data[j + 1])
+            {
+                std::swap(data[j], data[j + 1]);
+            }
+
+            // CONTROL SPEED: If you don't sleep at all,
+            // it sorts millions of items in a blink.
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+    }
+    indexA = -1; // Reset highlights when done
+    indexB = -1;
+    isSorting = false;
+}
+
+int main()
+{
+    sf::RenderWindow window(sf::VideoMode(800, 600), "Threaded Sorting");
+
+    // Start the sorting thread immediately
+    // In a real app, you'd trigger this with a button press
+    std::thread sortThread(bubbleSort);
+
+    while (window.isOpen())
+    {
         sf::Event event;
-        while (window.pollEvent(event)) {
+        while (window.pollEvent(event))
+        {
             if (event.type == sf::Event::Closed)
+            {
                 window.close();
+            }
         }
 
-        // --- SORTING LOGIC GOES HERE ---
-        // For now, we just display the static bars.
+        window.clear();
 
-        // 4. RENDERING (Drawing stuff)
-        window.clear(sf::Color::Black); // Wipe the screen black first
+        // DRAWING LOGIC
+        for (size_t i = 0; i < data.size(); i++)
+        {
+            float h = static_cast<float>(data[i]);
+            sf::RectangleShape bar(sf::Vector2f(40, h));
+            bar.setPosition(i * 50.0f, 600.0f - h);
 
-        // 1. Use size_t instead of int to match data.size()
-        for (std::size_t i = 0; i < data.size(); i++) {
-            
-            // 2. Explicitly cast the height to float
-            float height = static_cast<float>(data[i]);
-            sf::RectangleShape bar(sf::Vector2f(barWidth - 5, height));
+            // COLOR CODING
+            if (i == (size_t)indexA || i == (size_t)indexB)
+            {
+                bar.setFillColor(sf::Color::Red); // Active comparison
+            }
+            else
+            {
+                bar.setFillColor(sf::Color::Green);
+            }
 
-            // 3. Explicitly cast 'i' to float for position math
-            float xPos = static_cast<float>(i) * barWidth;
-            float yPos = 600.0f - height;
-            
-            // 
-            bar.setPosition(xPos, yPos);
-            bar.setFillColor(sf::Color::Green);
-            
             window.draw(bar);
         }
 
-        window.display(); // Push everything we drew to the screen
+        window.display();
+    }
+
+    // CLEANUP: If the window closes, we must wait for the thread to finish
+    // or "detach" it so it doesn't crash the program.
+    if (sortThread.joinable())
+    {
+        sortThread.detach();
     }
 
     return 0;
