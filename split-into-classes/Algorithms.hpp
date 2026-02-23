@@ -25,12 +25,20 @@ public:
     }
 };
 
-class SelectionSorter : public Sorter {
+class SelectionSorter : public Sorter 
+{
+// make everything readable to other places
 public:
+    // use the parents initizliaion logic
     using Sorter::Sorter;
 
-    void sortLogic(int delayMs) override {
+    // ovverride allows us to replace the function in parent class
+    void sortLogic(int delayMs) override 
+    {
+        // size_t: cannot be negative and goes from 0 to 18 quintillion
+        // for(start here; end here or if this happens; index by this amount every loop) {}
         for (size_t i = 0; i < data.size() && keepRunning; i++) {
+            // dont go over the same thing again
             size_t minIdx = i;
             for (size_t j = i + 1; j < data.size() && keepRunning; j++) {
                 activeA = static_cast<int>(i);

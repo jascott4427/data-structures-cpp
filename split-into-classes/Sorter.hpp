@@ -29,7 +29,7 @@ public:
     // safely store variables without allowing other threads to overrite data
     std::atomic<int> activeA{-1}; //-1 starts it at null
     std::atomic<int> activeB{-1};
-    std::atomic<bool> startRunning{false};
+    // std::atomic<bool> startRunning{false};
     std::atomic<bool> keepRunning{true};
 
     // Constructor: when we make the class, it inputs an int vector which is
