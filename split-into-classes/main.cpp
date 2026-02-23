@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include "Algorithms.hpp"
 #include <memory> // For std::unique_ptr
+#include <random>
 
 unsigned int WINDOW_X = 800;
 unsigned int WINDOW_Y = 600;
